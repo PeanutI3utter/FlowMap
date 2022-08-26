@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 from draw import draw_digraph
-from label import extract_subgraph_from, flowGraph
+from label import extract_subgraph_from
 
 
 class tcolors:
