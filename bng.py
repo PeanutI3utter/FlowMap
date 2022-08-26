@@ -30,7 +30,7 @@ except:
     sys.exit()
     
 nodeid = 0
-bng = nx.Graph()
+bng = nx.DiGraph()
 
 
 width = len(boolfunc.inputs)
