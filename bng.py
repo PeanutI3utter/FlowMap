@@ -5,6 +5,7 @@ from networkx.drawing.nx_pydot import graphviz_layout
 from networkx.drawing.nx_pydot import write_dot
 import blifparser.blifparser as blifparser
 import os
+from bngprint import print_bng
 
 from enum import Enum
 
@@ -24,11 +25,12 @@ try:
     blif = parser.blif
     boolfunc = blif.booleanfunctions[0]
     minterms = boolfunc.truthtable
+    infile.close()
 except:
     sys.exit()
     
 nodeid = 0
-bng = nx.Graph()
+bng = nx.DiGraph()
 
 
 width = len(boolfunc.inputs)
@@ -42,7 +44,6 @@ currentLevel += 1
 lastGateInMinterm = []
 
 minterm_spacing = 0;
-lines = infile.readlines()
 
 for minterm in minterms:
     currentLevel = 1
@@ -102,24 +103,4 @@ for i in range(len(lastGateInMinterm)):
     nodeid += 1
     currentLevel += 1
 
-print("Nodes in G: ", bng.nodes(data=True))
-
-write_dot(bng, 'graph.dot')
-
-dot = open("graph.dot", "r")
-dotout = open("graph_out.dot", "w")
-dotlines = dot.readlines()
-dotlines = dotlines[:-1]
-for line in dotlines:
-    dotout.write(line)
-dotout.write("{rank=min; ")
-for i in range(width):
-    dotout.write(" " + str(i) + ";")
-dotout.write("}" + "\n")
-dotout.write("}")
-    
-
-dot.close()
-os.remove("graph.dot")
-dotout.close()
-infile.close()
+print_bng(bng, width);
