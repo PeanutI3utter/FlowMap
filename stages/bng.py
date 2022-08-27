@@ -174,7 +174,7 @@ def subgraphToOnSet(subgraph):
                 ownOnSet = handleOR(leftOnSet, rightOnSet)
             else:
                 raise RuntimeError("unexpected gate type")
-                sys.ecit
+                sys.exit()
             nx.set_node_attributes(subgraph, {node:{'onSet':ownOnSet}})
         if (node == output):
             return ownOnSet
