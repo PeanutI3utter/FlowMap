@@ -1,5 +1,6 @@
 import os
 from networkx.drawing.nx_pydot import write_dot
+from graphviz import render
 
 def print_bng(bng, numinputs):
 
@@ -21,4 +22,6 @@ def print_bng(bng, numinputs):
     dot.close()
     os.remove("graph.dot")
     dotout.close()
+
+    render("dot", "png", "graph_out.dot")
 
