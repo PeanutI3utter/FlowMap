@@ -1,10 +1,5 @@
 import networkx as nx
-import pydot
-from networkx.drawing.nx_pydot import graphviz_layout
-from networkx.drawing.nx_pydot import write_dot
 import blifparser.blifparser as blifparser
-import os
-from util.bngprint import print_bng
 
 from enum import Enum
 

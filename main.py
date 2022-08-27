@@ -1,6 +1,5 @@
 import sys
 
-from stages.label import flowGraph
 from stages.bng import blif_to_bng
 from util.bngprint import print_bng
 

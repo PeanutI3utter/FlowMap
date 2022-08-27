@@ -1,8 +1,4 @@
-import networkx as nx
-import sys
 import os
-import pydot
-from networkx.drawing.nx_pydot import graphviz_layout
 from networkx.drawing.nx_pydot import write_dot
 
 def print_bng(bng, numinputs):
