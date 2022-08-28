@@ -1,5 +1,6 @@
 import networkx as nx
 
+
 '''
     Get a subgraph containing all ancestor nodes and itself
     of the given node
@@ -8,6 +9,7 @@ def extract_subgraph_from (graph: nx.DiGraph, node: str) -> nx.DiGraph:
     sub = list(nx.ancestors(graph, node))
     sub.append(node)
     return graph.subgraph(sub)
+
 
 '''
     Create graph which is used to determine the label of the output of
@@ -62,6 +64,7 @@ def flowGraph(graph: nx.DiGraph) -> nx.DiGraph:
     nx.set_node_attributes(flowgraph, {f'DRAIN_{output}': {'contains': highest_level_nodes, 'mapped_to': output}})
 
     return flowgraph
+
 
 '''
     Label phase of the FlowMap Algorithm
