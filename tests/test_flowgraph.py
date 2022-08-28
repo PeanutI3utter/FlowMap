@@ -34,7 +34,7 @@ TEST_SET_FLOWGRAPH = [
         'expected_nodes': [
             'S', 'a_in', 'a_out', 'b_in', 'b_out', 'c_in', 'c_out',
             'd_in', 'd_out', 'e_in', 'e_out', 'f_in', 'f_out',
-            'g_in', 'g_out', 'h_in', 'h_out', 'i_in', 'i_out', ('DRAIN_m', {'contains': {'j', 'k', 'l'}, 'mapped_to': 'm'})
+            'g_in', 'g_out', 'h_in', 'h_out', 'i_in', 'i_out', ('T', {'contains': {'j', 'k', 'l'}, 'mapped_to': 'm'})
         ],
         'expected_edges': [
             ('a_in', 'a_out', {'capacity': 1}), ('b_in', 'b_out', {'capacity': 1}),
@@ -47,8 +47,8 @@ TEST_SET_FLOWGRAPH = [
             ('a_out', 'f_in'), ('b_out', 'f_in'), ('b_out', 'g_in'),
             ('c_out', 'g_in'), ('d_out', 'h_in'), ('e_out', 'h_in'),
             ('f_out', 'i_in'), ('g_out', 'i_in'),
-            ('h_out', 'DRAIN_m'), ('i_out', 'DRAIN_m'), ('g_out', 'DRAIN_m'),
-            ('f_out', 'DRAIN_m')
+            ('h_out', 'T'), ('i_out', 'T'), ('g_out', 'T'),
+            ('f_out', 'T')
         ]
     },
 ]

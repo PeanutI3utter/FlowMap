@@ -55,13 +55,13 @@ def flowGraph(graph: nx.DiGraph) -> nx.DiGraph:
         incoming_edges = graph.in_edges(node)
         for edge in incoming_edges:
             if edge[0] not in highest_level_nodes:
-                flowgraph.add_edge(edge[0] + '_out', f'DRAIN_{output}')
+                flowgraph.add_edge(edge[0] + '_out', f'T')
 
     for edge in graph.in_edges(output):
         if edge[0] not in highest_level_nodes:
-            flowgraph.add_edge(edge[0] + '_out', f'DRAIN_{output}')
+            flowgraph.add_edge(edge[0] + '_out', f'T')
 
-    nx.set_node_attributes(flowgraph, {f'DRAIN_{output}': {'contains': highest_level_nodes, 'mapped_to': output}})
+    nx.set_node_attributes(flowgraph, {f'T': {'contains': highest_level_nodes, 'mapped_to': output}})
 
     return flowgraph
 
