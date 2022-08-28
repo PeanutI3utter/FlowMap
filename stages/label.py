@@ -24,6 +24,10 @@ def extract_subgraph_from (graph: nx.DiGraph, node: str) -> nx.DiGraph:
         flow graph of the original function, the drain node has a attribute
         "contains", which is a set of all nodes that is combined into the
         drain node.
+
+    Requirements:
+        Requires that every node except the output node in subgraph to
+        have the attribute "level"
 '''
 def flowGraph(graph: nx.DiGraph) -> nx.DiGraph:
     flowgraph = nx.DiGraph()
@@ -32,6 +36,7 @@ def flowGraph(graph: nx.DiGraph) -> nx.DiGraph:
     input_nodes = [node for node, deg in graph.in_degree() if not deg]
     output = nodes_sorted[-1]
 
+    # nodes with highest label are packed into T with output node
     highest_level = graph.nodes[nodes_sorted[-2]]['level']
     highest_level_nodes = [nodes_sorted[-2]]
     for node in nodes_sorted[-3::-1]:
@@ -41,24 +46,31 @@ def flowGraph(graph: nx.DiGraph) -> nx.DiGraph:
             break
     highest_level_nodes = set(highest_level_nodes)
 
+    # nodes which are not input nodes nor nodes with highest label
     inter_nodes = nodes_sorted[len(input_nodes):-len(highest_level_nodes)-1]
     
+    # input nodes are connected to S (sink)
     for node in input_nodes:
         flowgraph.add_edge('S', node + '_in')
         flowgraph.add_edge(node + '_in', node + '_out', capacity=1)
     
+    # Split intermediate node, add bridging edge
+    # add edges going to intermediate node
     for node in inter_nodes:
         incoming_edges = graph.in_edges(node)
         for edge in incoming_edges:
             flowgraph.add_edge(edge[0] + '_out', node + '_in')
         flowgraph.add_edge(node + '_in', node + '_out', capacity=1)
     
+    # edges going to nodes packed into T (except output)
     for node in highest_level_nodes:
         incoming_edges = graph.in_edges(node)
         for edge in incoming_edges:
+            # edges going from T to T are ignored
             if edge[0] not in highest_level_nodes:
                 flowgraph.add_edge(edge[0] + '_out', f'T')
 
+    # edges going to output node
     for edge in graph.in_edges(output):
         if edge[0] not in highest_level_nodes:
             flowgraph.add_edge(edge[0] + '_out', f'T')
@@ -90,6 +102,7 @@ def label(graph: nx.DiGraph, k: int) -> nx.DiGraph:
         if node not in input_nodes
     ]
 
+    # Input nodes labeled with 0 and no cut is saved
     for node in input_nodes:
         nx.set_node_attributes(
             labeled_graph, {node: {'level': 0, 'cut': set()}}
@@ -98,12 +111,14 @@ def label(graph: nx.DiGraph, k: int) -> nx.DiGraph:
     for node in nodes_to_be_labeled:
         parents = labeled_graph.predecessors(node)
 
+        # nodes who are only connected to inputs are labeled with 1
+        # (They have a label of 1 as inputs cannot be packed into LUTs)
         if all(parent in input_nodes for parent in parents):
             nx.set_node_attributes(
                 labeled_graph, {node: {'level': 1, 'cut': {node}}}
             )
             continue
-        
+
         subgraph = extract_subgraph_from(labeled_graph, node)
         flowgraph = flowGraph(subgraph)
         res_graph = shortest_augmenting_path(flowgraph, 'S', 'T')
@@ -111,7 +126,11 @@ def label(graph: nx.DiGraph, k: int) -> nx.DiGraph:
             nx.get_node_attributes(labeled_graph, 'level').values()
         )
         
+        # if k-feasible cut exists, then pack gates into cut which are
+        # not reachable from the source in the residual graph
+        # set label to same as highest predecessor label
         if res_graph.graph['flow_value'] <= k:
+
             outside_nodes = {
                 n[:-3] for n in res_graph.nodes if n.endswith('_in')
             }
@@ -122,7 +141,11 @@ def label(graph: nx.DiGraph, k: int) -> nx.DiGraph:
             nx.set_node_attributes(
                 labeled_graph, {node: {'level': highest_label, 'cut': cut}}
             )
+
+        # Otherwise set label to highest predecessor label + 1
+        # Put node into cut
         else:
+
             nx.set_node_attributes(
                 labeled_graph, {node: {'level': highest_label + 1, 'cut': {node}}}
             )
