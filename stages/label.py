@@ -1,5 +1,7 @@
 import networkx as nx
 
+from networkx.algorithms.flow import shortest_augmenting_path
+
 
 '''
     Get a subgraph containing all ancestor nodes and itself
@@ -77,5 +79,52 @@ def flowGraph(graph: nx.DiGraph) -> nx.DiGraph:
                 in an k-feasible optimal height cut
 '''
 def label(graph: nx.DiGraph, k: int) -> nx.DiGraph:
-    pass
+    labeled_graph = graph.copy()
+    input_nodes = {
+        node for node, deg in labeled_graph.in_degree()
+        if not deg
+    }
+
+    nodes_to_be_labeled = [
+        node for node in nx.topological_sort(graph)
+        if node not in input_nodes
+    ]
+
+    for node in input_nodes:
+        nx.set_node_attributes(
+            labeled_graph, {node: {'level': 0, 'cut': set()}}
+        )
+
+    for node in nodes_to_be_labeled:
+        parents = labeled_graph.predecessors(node)
+
+        if all(parent in input_nodes for parent in parents):
+            nx.set_node_attributes(
+                labeled_graph, {node: {'level': 1, 'cut': {node}}}
+            )
+            continue
         
+        subgraph = extract_subgraph_from(labeled_graph, node)
+        flowgraph = flowGraph(subgraph)
+        res_graph = shortest_augmenting_path(flowgraph, 'S', 'T')
+        highest_label = max(
+            nx.get_node_attributes(labeled_graph, 'level').values()
+        )
+        
+        if res_graph.graph['flow_value'] <= k:
+            outside_nodes = {
+                n[:-3] for n in res_graph.nodes if n.endswith('_in')
+            }
+            cut = {
+                n for n in subgraph.nodes
+                if n not in input_nodes and n not in outside_nodes
+            }
+            nx.set_node_attributes(
+                labeled_graph, {node: {'level': highest_label, 'cut': cut}}
+            )
+        else:
+            nx.set_node_attributes(
+                labeled_graph, {node: {'level': highest_label + 1, 'cut': {node}}}
+            )
+    
+    return labeled_graph
