@@ -47,4 +47,4 @@ expected.add_edges_from([
 
 
 def test_labeling():
-    assert nx.utils.graphs_equal(label(G), expected)
+    assert nx.utils.graphs_equal(label(G, 3), expected)

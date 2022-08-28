@@ -68,7 +68,14 @@ def flowGraph(graph: nx.DiGraph) -> nx.DiGraph:
 
 '''
     Label phase of the FlowMap Algorithm
+
+    Output:
+        A shallow copy of the given graph, with labeled nodes.
+        Nodes are extended with two attributes:
+            level: label of the node
+            cut: set of nodes which are combined to a k-lut
+                in an k-feasible optimal height cut
 '''
-def label(graph: nx.DiGraph) -> nx.DiGraph:
+def label(graph: nx.DiGraph, k: int) -> nx.DiGraph:
     pass
         
