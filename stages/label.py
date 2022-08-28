@@ -1,13 +1,27 @@
 import networkx as nx
 
-
+'''
+    Get a subgraph containing all ancestor nodes and itself
+    of the given node
+'''
 def extract_subgraph_from (graph: nx.DiGraph, node: str) -> nx.DiGraph:
     sub = list(nx.ancestors(graph, node))
     sub.append(node)
     return graph.subgraph(sub)
 
+'''
+    Create graph which is used to determine the label of the output of
+    the given subgraph
 
-def flowGraph(graph: nx.DiGraph):
+    Input:
+        graph: Original graph, from which a flow graph is to be created
+    
+    Output:
+        flow graph of the original function, the drain node has a attribute
+        "contains", which is a set of all nodes that is combined into the
+        drain node.
+'''
+def flowGraph(graph: nx.DiGraph) -> nx.DiGraph:
     flowgraph = nx.DiGraph()
     nodes_sorted = list(nx.topological_sort(graph))
 
@@ -21,6 +35,7 @@ def flowGraph(graph: nx.DiGraph):
             highest_level_nodes.append(node)
         else:
             break
+    highest_level_nodes = set(highest_level_nodes)
 
     inter_nodes = nodes_sorted[len(input_nodes):-len(highest_level_nodes)-1]
     
