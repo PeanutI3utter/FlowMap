@@ -62,4 +62,10 @@ def flowGraph(graph: nx.DiGraph) -> nx.DiGraph:
     nx.set_node_attributes(flowgraph, {f'DRAIN_{output}': {'contains': highest_level_nodes, 'mapped_to': output}})
 
     return flowgraph
+
+'''
+    Label phase of the FlowMap Algorithm
+'''
+def label(graph: nx.DiGraph) -> nx.DiGraph:
+    pass
         
