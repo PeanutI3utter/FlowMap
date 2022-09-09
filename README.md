@@ -11,6 +11,7 @@ networkx
 pygraphviz
 matplotlib
 numpy
+blifparser
 ```
 
 ## Usage
