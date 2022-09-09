@@ -12,6 +12,7 @@ class gate(IntEnum):
     PI = 0
     AND = 1
     OR = 2
+    LUT = 3
 
 
 def blif_to_bng(blif_path: str):
@@ -21,6 +22,8 @@ def blif_to_bng(blif_path: str):
         blif = parser.blif
         boolfunc = blif.booleanfunctions[0]
         minterms = boolfunc.truthtable
+        inputnames = boolfunc.inputs
+        outputnames = boolfunc.output
     except:
         raise RuntimeError("Error while opening/reading BLIF file.")
         
@@ -95,7 +98,57 @@ def blif_to_bng(blif_path: str):
         nodeid += 1
         currentLevel += 1
 
-    return bng
+    return (bng, inputnames, outputnames)
+
+
+
+
+def bng_to_blif(bng, inputnames, outputnames):
+
+    try:
+        outputf = open("output.blif", "w")
+    except:
+        raise RuntimeError("Error while writing output BLIF file.")
+
+    nodes = list(nx.topological_sort(bng))
+    onSets = nx.get_node_attributes(bng, "onSet")
+    outputf.write(".model mapping\n.inputs ")
+    for inputname in inputnames:
+        outputf.write(inputname + " ")
+    outputf.write("\n.outputs " + outputnames + "\n\n")
+    
+    for node in nodes:
+        if len(list(bng.predecessors(nodes[node]))) > 0:
+            inpts = list(bng.in_edges(node, data = False))
+            inpts_str = ""
+            for inp in inpts:
+                if inp[0] < len(inputnames):
+                    inpts_str += inputnames[inp[0]] + " "
+                else:
+                    inpts_str += "w" + str(inp[0]) + " " 
+            if len(list(bng.out_edges(node, data = False))) == 0:
+                outputf.write(".names " + inpts_str + outputnames + "\n")
+            else:
+                outputf.write(".names " + inpts_str + "w" + str(inpts[0][1]) + "\n")
+
+            for cube in onSets[node]:
+                cubestr = ""
+                for symbol in cube:
+                    if symbol == inSymbol.ON:
+                        cubestr += "1"
+                    if symbol == inSymbol.OFF:
+                        cubestr += "0"
+                    if symbol == inSymbol.DC:
+                        cubestr += "-"
+                outputf.write(cubestr + " 1" + "\n")
+
+            outputf.write("\n")
+
+    outputf.write(".end")
+    outputf.close()
+            
+            
+
 
 
 #positional cube notation
