@@ -6,16 +6,18 @@ from stages.bng import gate, inSymbol
 
 def flowmap(labeled_graph: nx.DiGraph) -> nx.DiGraph:
     LUT_graph = nx.DiGraph()
-    circuit_output = [
+    circuit_outputs = [
         node for node, deg in labeled_graph.out_degree() if not deg
-    ][0]
+    ]
     circuit_inputs = [
         node for node, deg in labeled_graph.in_degree() if not deg
     ]
 
-    to_be_mapped = [circuit_output]
+    to_be_mapped = []
+    for node in circuit_outputs:
+        LUT_graph.add_node(node, label=node, gtype=gate.PO)
+        to_be_mapped.append(node)
 
-    LUT_graph.add_node(circuit_output, label=circuit_output, gtype=gate.PO)
     for circuit_input in circuit_inputs:
         LUT_graph.add_node(
             circuit_input, func=bx.get_var(circuit_input),
