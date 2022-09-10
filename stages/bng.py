@@ -1,4 +1,5 @@
 import blifparser.blifparser as blifparser
+import boolexpr as bx
 import networkx as nx
 import sys
 
@@ -118,51 +119,52 @@ def blif_to_bng(path_to_blif: str) -> nx.DiGraph:
     return bng
 
 
-def bng_to_blif(bng, inputnames, outputnames):
+def bng_to_blif(bng: nx.DiGraph, output_file='a.blif', model_name='fpga'):
 
     try:
-        outputf = open("output.blif", "w")
+        file = open(output_file, "w")
     except Exception:
         raise RuntimeError("Error while writing output BLIF file.")
 
-    nodes = list(nx.topological_sort(bng))
-    onSets = nx.get_node_attributes(bng, "onSet")
-    outputf.write(".model mapping\n.inputs ")
-    for inputname in inputnames:
-        outputf.write(inputname + " ")
-    outputf.write("\n.outputs " + outputnames + "\n\n")
+    file.write(f'.model {model_name}\n')
 
-    for node in nodes:
-        if len(list(bng.predecessors(nodes[node]))) > 0:
-            inpts = list(bng.in_edges(node, data=False))
-            inpts_str = ""
-            for inp in inpts:
-                if inp[0] < len(inputnames):
-                    inpts_str += inputnames[inp[0]] + " "
-                else:
-                    inpts_str += "w" + str(inp[0]) + " "
-            if len(list(bng.out_edges(node, data=False))) == 0:
-                outputf.write(".names " + inpts_str + outputnames + "\n")
-            else:
-                outputf.write(
-                    ".names " + inpts_str + "w" + str(inpts[0][1]) + "\n"
-                )
+    nodes = [(node, bng.nodes[node] )for node in nx.topological_sort(bng)]
+    print(len(nodes))
 
-            for cube in onSets[node]:
-                cubestr = ""
-                for symbol in cube:
-                    if symbol == inSymbol.ON:
-                        cubestr += "1"
-                    if symbol == inSymbol.OFF:
-                        cubestr += "0"
-                    if symbol == inSymbol.DC:
-                        cubestr += "-"
-                outputf.write(cubestr + " 1" + "\n")
+    inputs_str = '.inputs'
+    outputs_str = '.outputs'
+    func_str = ''
 
-            outputf.write("\n")
+    for node, attributes in nodes:
+        label = attributes['label']
+        if attributes['gtype'] == gate.PI:
+            inputs_str += f' {label}'
+            continue
+        
+        if attributes['gtype'] == gate.PO:
+            outputs_str += f' {label}'
 
-    outputf.write(".end")
-    outputf.close()
+        func: bx.BoolExpr = attributes['func']
+
+        input_order = []
+        func_str += '.names'
+        for input in func.support():
+            func_str += f' {input}'
+            input_order.append(input)
+        func_str += f' {node}\n'
+
+        for minterm in func.iter_sat():
+            for input in input_order:
+                val = minterm[input]
+                func_str += f'{val}'
+            func_str += ' 1\n'
+    
+    func_str += '.end'
+    file.write(inputs_str + '\n')
+    file.write(outputs_str + '\n')
+    file.write(func_str + '\n')
+
+    file.close()
 
 
 # positional cube notation
