@@ -123,7 +123,7 @@ def label(graph: nx.DiGraph, k: int) -> nx.DiGraph:
         flowgraph = flowGraph(subgraph)
         res_graph = shortest_augmenting_path(flowgraph, 'S', 'T')
         highest_label = max(
-            nx.get_node_attributes(labeled_graph, 'level').values()
+            nx.get_node_attributes(subgraph, 'level').values()
         )
         
         # if k-feasible cut exists, then pack gates into cut which are
