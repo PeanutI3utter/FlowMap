@@ -1,0 +1,11 @@
+# Benchmark "ex" written by ABC on Thu Jun  4 14:03:01 2020
+.model ex
+.inputs a b c d
+.outputs F
+.names a b c d F
+1000 1
+1011 1
+1100 1
+1111 1
+0110 1
+.end

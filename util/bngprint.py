@@ -2,7 +2,8 @@ import os
 from networkx.drawing.nx_pydot import write_dot
 from graphviz import render
 
-def print_bng(bng, numinputs):
+
+def print_bng(bng):
 
     write_dot(bng, 'graph.dot')
 
@@ -13,15 +14,14 @@ def print_bng(bng, numinputs):
     for line in dotlines:
         dotout.write(line)
     dotout.write("{rank=min; ")
-    for i in range(numinputs):
-        dotout.write(" " + str(i) + ";")
+    inputs = [node for node, deg in bng.in_degree() if not deg]
+    for input in inputs:
+        dotout.write(" " + str(input) + ";")
     dotout.write("}" + "\n")
     dotout.write("}")
-        
 
     dot.close()
     os.remove("graph.dot")
     dotout.close()
 
     render("dot", "png", "graph_out.dot")
-

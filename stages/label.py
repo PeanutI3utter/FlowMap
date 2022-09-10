@@ -3,23 +3,24 @@ import networkx as nx
 from networkx.algorithms.flow import shortest_augmenting_path
 
 
-'''
+def extract_subgraph_from(graph: nx.DiGraph, node: str) -> nx.DiGraph:
+    """
     Get a subgraph containing all ancestor nodes and itself
     of the given node
-'''
-def extract_subgraph_from (graph: nx.DiGraph, node: str) -> nx.DiGraph:
+    """
     sub = list(nx.ancestors(graph, node))
     sub.append(node)
     return graph.subgraph(sub)
 
 
-'''
+def flowGraph(graph: nx.DiGraph) -> nx.DiGraph:
+    """
     Create graph which is used to determine the label of the output of
     the given subgraph
 
     Input:
         graph: Original graph, from which a flow graph is to be created
-    
+
     Output:
         flow graph of the original function, the drain node has a attribute
         "contains", which is a set of all nodes that is combined into the
@@ -28,8 +29,7 @@ def extract_subgraph_from (graph: nx.DiGraph, node: str) -> nx.DiGraph:
     Requirements:
         Requires that every node except the output node in subgraph to
         have the attribute "level"
-'''
-def flowGraph(graph: nx.DiGraph) -> nx.DiGraph:
+    """
     flowgraph = nx.DiGraph()
     nodes_sorted = list(nx.topological_sort(graph))
 
@@ -48,12 +48,12 @@ def flowGraph(graph: nx.DiGraph) -> nx.DiGraph:
 
     # nodes which are not input nodes nor nodes with highest label
     inter_nodes = nodes_sorted[len(input_nodes):-len(highest_level_nodes)-1]
-    
+
     # input nodes are connected to S (sink)
     for node in input_nodes:
         flowgraph.add_edge('S', node + '_in')
         flowgraph.add_edge(node + '_in', node + '_out', capacity=1)
-    
+
     # Split intermediate node, add bridging edge
     # add edges going to intermediate node
     for node in inter_nodes:
@@ -61,26 +61,30 @@ def flowGraph(graph: nx.DiGraph) -> nx.DiGraph:
         for edge in incoming_edges:
             flowgraph.add_edge(edge[0] + '_out', node + '_in')
         flowgraph.add_edge(node + '_in', node + '_out', capacity=1)
-    
+
     # edges going to nodes packed into T (except output)
     for node in highest_level_nodes:
         incoming_edges = graph.in_edges(node)
         for edge in incoming_edges:
             # edges going from T to T are ignored
             if edge[0] not in highest_level_nodes:
-                flowgraph.add_edge(edge[0] + '_out', f'T')
+                flowgraph.add_edge(edge[0] + '_out', 'T')
 
     # edges going to output node
     for edge in graph.in_edges(output):
         if edge[0] not in highest_level_nodes:
-            flowgraph.add_edge(edge[0] + '_out', f'T')
+            flowgraph.add_edge(edge[0] + '_out', 'T')
 
-    nx.set_node_attributes(flowgraph, {f'T': {'contains': highest_level_nodes, 'mapped_to': output}})
+    nx.set_node_attributes(
+        flowgraph,
+        {'T': {'contains': highest_level_nodes, 'mapped_to': output}}
+    )
 
     return flowgraph
 
 
-'''
+def label(graph: nx.DiGraph, k: int) -> nx.DiGraph:
+    """
     Label phase of the FlowMap Algorithm
 
     Output:
@@ -89,8 +93,7 @@ def flowGraph(graph: nx.DiGraph) -> nx.DiGraph:
             level: label of the node
             cut: set of nodes which are combined to a k-lut
                 in an k-feasible optimal height cut
-'''
-def label(graph: nx.DiGraph, k: int) -> nx.DiGraph:
+    """
     labeled_graph = graph.copy()
     input_nodes = {
         node for node, deg in labeled_graph.in_degree()
@@ -125,7 +128,7 @@ def label(graph: nx.DiGraph, k: int) -> nx.DiGraph:
         highest_label = max(
             nx.get_node_attributes(subgraph, 'level').values()
         )
-        
+
         # if k-feasible cut exists, then pack gates into cut which are
         # not reachable from the source in the residual graph
         # set label to same as highest predecessor label
@@ -147,7 +150,8 @@ def label(graph: nx.DiGraph, k: int) -> nx.DiGraph:
         else:
 
             nx.set_node_attributes(
-                labeled_graph, {node: {'level': highest_label + 1, 'cut': {node}}}
+                labeled_graph,
+                {node: {'level': highest_label + 1, 'cut': {node}}}
             )
-    
+
     return labeled_graph
