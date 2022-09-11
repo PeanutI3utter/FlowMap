@@ -26,7 +26,7 @@ def blif_to_bng(path_to_blif: str) -> nx.DiGraph:
     if len(blif.latches) > 0 or blif.fsm.ispresent:
         raise RuntimeError("Complex Logic Modules not supported yet")
 
-    bng = nx.DiGraph()
+    bng = nx.DiGraph(name=blif.model.name)
     for input in blif.inputs.inputs:
         bng.add_node(input, gtype=gate.PI, label=input)
 
