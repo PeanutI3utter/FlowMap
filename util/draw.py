@@ -1,5 +1,4 @@
 import networkx as nx
-from networkx.drawing.nx_pydot import write_dot
 from networkx.drawing.nx_agraph import graphviz_layout
 
 

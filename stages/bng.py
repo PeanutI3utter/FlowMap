@@ -98,13 +98,13 @@ def blif_to_bng(path_to_blif: str) -> nx.DiGraph:
                 bng.add_edge(
                     left[1],
                     new_or_node,
-                    inverted=left[0], 
+                    inverted=left[0],
                     color='purple' if right[0] else ''
                 )
                 bng.add_edge(
                     right[1],
                     new_or_node,
-                    inverted=right[0], 
+                    inverted=right[0],
                     color='purple' if right[0] else ''
                 )
                 ORs.append((False, new_or_node))

@@ -7,10 +7,12 @@ from stages.enums import gate, inSymbol
 def flowmap(labeled_graph: nx.DiGraph) -> nx.DiGraph:
     LUT_graph = nx.DiGraph()
     circuit_outputs = [
-        node for node, gtype in labeled_graph.nodes(data='gtype') if gtype == gate.PO
+        node for node, gtype in labeled_graph.nodes(data='gtype')
+        if gtype == gate.PO
     ]
     circuit_inputs = [
-        node for node, gtype in labeled_graph.nodes(data='gtype') if gtype == gate.PI
+        node for node, gtype in labeled_graph.nodes(data='gtype')
+        if gtype == gate.PI
     ]
 
     to_be_mapped = []

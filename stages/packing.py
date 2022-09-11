@@ -30,7 +30,7 @@ def gate_decomposition(LUT_graph: nx.DiGraph, k: int):
                 if len(i_successors) > 1:
                     continue
 
-                for j in range(i + 1,len(LUT_parents)):
+                for j in range(i + 1, len(LUT_parents)):
                     parent_j = LUT_parents[j]
                     j_predecessors = list(
                         LUT_graph.predecessors(parent_j)
@@ -53,12 +53,12 @@ def gate_decomposition(LUT_graph: nx.DiGraph, k: int):
                     ])
 
                     LUT_func: sp.logic.boolalg.BooleanFunction = \
-                            LUT_graph.nodes[LUT_node]['func']
+                        LUT_graph.nodes[LUT_node]['func']
                     var_i = sp.symbols(parent_i)
                     var_j = sp.symbols(parent_j)
                     sat = sp.logic.inference.satisfiable(
                             LUT_func, all_models=True)
-                    
+
                     for cube in sat:
                         if not cube:
                             break
@@ -75,12 +75,13 @@ def gate_decomposition(LUT_graph: nx.DiGraph, k: int):
                                 b_j = str(int(cube[var_j]))
 
                                 if class_graph.has_edge(f'{a_i}{a_j}',
-                                        f'{b_i}{b_j}'):
+                                                        f'{b_i}{b_j}'):
+
                                     class_graph.remove_edge(
                                         f'{a_i}{a_j}',
                                         f'{b_i}{b_j}'
                                     )
-                    
+
                     connected_comps = list(
                         nx.connected_components(class_graph)
                     )
@@ -102,30 +103,30 @@ def gate_decomposition(LUT_graph: nx.DiGraph, k: int):
                                 if var in new_vars:
                                     entry[new_vars.index(var)] = int(val)
 
-                            bound_vars = f'{int(cube[var_i])}{int(cube[var_j])}'
-                            if bound_vars in connected_comps[0]:
+                            boundvars = f'{int(cube[var_i])}{int(cube[var_j])}'
+                            if boundvars in connected_comps[0]:
                                 entry[-1] = 1
-                            
+
                             new_truthtable.append(entry)
 
                         LUT_graph.nodes[LUT_node]['func'] = sp.simplify_logic(
                             sp.POSform(new_vars, new_truthtable)
                         )
-                        
+
                         child_func = sp.false
-                        for bound_vars in connected_comps[0]:
-                            if bound_vars[0] == '1':
+                        for boundvars in connected_comps[0]:
+                            if boundvars[0] == '1':
                                 a = LUT_graph.nodes[parent_i]['func']
                             else:
                                 a = ~LUT_graph.nodes[parent_i]['func']
 
-                            if bound_vars[1] == '1':
+                            if boundvars[1] == '1':
                                 b = LUT_graph.nodes[parent_j]['func']
                             else:
                                 b = ~LUT_graph.nodes[parent_j]['func']
-                            
+
                             child_func |= a & b
-                        
+
                         LUT_graph.add_node(
                             new_childlut_str,
                             label=new_childlut_str,
@@ -138,7 +139,7 @@ def gate_decomposition(LUT_graph: nx.DiGraph, k: int):
                                 node,
                                 new_childlut_str
                             )
-                        
+
                         LUT_graph.add_edge(new_childlut_str, LUT_node)
                         LUT_graph.remove_nodes_from(
                             (parent_i, parent_j)
@@ -148,7 +149,7 @@ def gate_decomposition(LUT_graph: nx.DiGraph, k: int):
                 if decomp_found:
                     break
             if decomp_found:
-                    break
+                break
         if not decomp_found:
             break
     pass
