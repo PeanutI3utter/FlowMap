@@ -3,17 +3,8 @@ import boolexpr as bx
 import networkx as nx
 import sys
 
-from enum import IntEnum
+from stages.enums import gate, inSymbol
 from typing import Dict, List, Tuple
-
-
-class gate(IntEnum):
-    PI = 0
-    AND = 1
-    OR = 2
-    PO = 3
-    INTERMEDIATE = 4
-    LUT = 5
 
 
 def blif_to_bng(path_to_blif: str) -> nx.DiGraph:
@@ -128,7 +119,7 @@ def bng_to_blif(bng: nx.DiGraph, output_file='a.blif', model_name='fpga'):
 
     file.write(f'.model {model_name}\n')
 
-    nodes = [(node, bng.nodes[node] )for node in nx.topological_sort(bng)]
+    nodes = [(node, bng.nodes[node])for node in nx.topological_sort(bng)]
     print(len(nodes))
 
     inputs_str = '.inputs'
@@ -140,7 +131,7 @@ def bng_to_blif(bng: nx.DiGraph, output_file='a.blif', model_name='fpga'):
         if attributes['gtype'] == gate.PI:
             inputs_str += f' {label}'
             continue
-        
+
         if attributes['gtype'] == gate.PO:
             outputs_str += f' {label}'
 
@@ -158,21 +149,13 @@ def bng_to_blif(bng: nx.DiGraph, output_file='a.blif', model_name='fpga'):
                 val = minterm[input]
                 func_str += f'{val}'
             func_str += ' 1\n'
-    
+
     func_str += '.end'
     file.write(inputs_str + '\n')
     file.write(outputs_str + '\n')
     file.write(func_str + '\n')
 
     file.close()
-
-
-# positional cube notation
-class inSymbol(IntEnum):
-    INV = 0
-    ON = 1
-    OFF = 2
-    DC = 3
 
 
 def handleAND(lhs, rhs):

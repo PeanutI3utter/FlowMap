@@ -15,7 +15,7 @@ def main():
     name = bng.graph['name']
     lut = flowmap(label(bng, int(sys.argv[2])))
     bng_to_blif(lut, model_name=f'{name}_mapped')
-    
+
 
 if __name__ == '__main__':
     main()

@@ -1,7 +1,7 @@
 import boolexpr as bx
 import networkx as nx
 
-from stages.bng import gate, inSymbol
+from stages.enums import gate, inSymbol
 
 
 def flowmap(labeled_graph: nx.DiGraph) -> nx.DiGraph:
