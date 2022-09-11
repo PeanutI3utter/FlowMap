@@ -25,7 +25,7 @@ def blif_to_bng(path_to_blif: str) -> nx.DiGraph:
         bng.add_node(output, gtype=gate.PO, label=output)
 
     and_lookup: Dict[Tuple[bool, str], Dict[Tuple[bool, str], str]] = {}
-    or_lookup: Dict[str, Dict[str, str]] = {}
+    or_lookup: Dict[Tuple[bool, str], Dict[Tuple[bool, str], str]] = {}
 
     and_counter = 0
     or_counter = 0
@@ -34,6 +34,11 @@ def blif_to_bng(path_to_blif: str) -> nx.DiGraph:
         truth_table = bool_func.truthtable
         inputs = bool_func.inputs
         num_input = len(inputs)
+        for i in range(num_input):
+            if inputs[i] not in bng.nodes:
+                bng.add_node(
+                    inputs[i], gtype=gate.INTERMEDIATE, label=inputs[i]
+                )
 
         ORs: List[str] = []
         for minterm in truth_table:
@@ -42,11 +47,6 @@ def blif_to_bng(path_to_blif: str) -> nx.DiGraph:
 
             ANDs = []
             for i in range(num_input):
-                if inputs[i] not in bng.nodes:
-                    bng.add_node(
-                        inputs[i], gtype=gate.INTERMEDIATE, label=inputs[i]
-                    )
-
                 if minterm[i] == '1':
                     ANDs.append((False, inputs[i]))
                 elif minterm[i] == '0':
@@ -64,7 +64,7 @@ def blif_to_bng(path_to_blif: str) -> nx.DiGraph:
                     new_and_node = f'AND[{and_counter}]'
                     and_lookup[left][right] = new_and_node
                     bng.add_node(
-                        new_and_node, gtype=gate.AND, label=new_and_node
+                        new_and_node, gtype=gate.AND, label=new_and_node,
                     )
                     bng.add_edge(
                         left[1], new_and_node, inverted=left[0],
@@ -85,23 +85,39 @@ def blif_to_bng(path_to_blif: str) -> nx.DiGraph:
             left: str = ORs.pop(0)
             right: str = ORs.pop(0)
 
-            if left[1] not in or_lookup:
-                or_lookup[left[1]] = {}
+            if left not in or_lookup:
+                or_lookup[left] = {}
 
-            if right[1] not in or_lookup[left[1]]:
+            if right not in or_lookup[left]:
 
                 new_or_node = f'OR[{or_counter}]'
-                or_lookup[left[1]][right[1]] = new_or_node
-                bng.add_node(new_or_node, gtype=gate.OR, label=new_or_node)
-                bng.add_edge(left[1], new_or_node, inverted=left[0], color='')
+                or_lookup[left][right] = new_or_node
+                bng.add_node(
+                    new_or_node, gtype=gate.OR, label=new_or_node,
+                )
                 bng.add_edge(
-                    right[1], new_or_node, inverted=right[0], color=''
+                    left[1],
+                    new_or_node,
+                    inverted=left[0], 
+                    color='purple' if right[0] else ''
+                )
+                bng.add_edge(
+                    right[1],
+                    new_or_node,
+                    inverted=right[0], 
+                    color='purple' if right[0] else ''
                 )
                 ORs.append((False, new_or_node))
                 or_counter += 1
             else:
-                ORs.append((False, or_lookup[left[1]][right[1]]))
+                ORs.append((False, or_lookup[left][right]))
 
+        if not bng.has_node(bool_func.output):
+            bng.add_node(
+                bool_func.output,
+                gtype=gate.INTERMEDIATE,
+                label=bool_func.output,
+            )
         bng.add_edge(
             ORs[0][1], bool_func.output, inverted=ORs[0][0],
             color='purple' if ORs[0][0] else ''
@@ -120,7 +136,6 @@ def bng_to_blif(bng: nx.DiGraph, output_file='a.blif', model_name='fpga'):
     file.write(f'.model {model_name}\n')
 
     nodes = [(node, bng.nodes[node])for node in nx.topological_sort(bng)]
-    print(len(nodes))
 
     inputs_str = '.inputs'
     outputs_str = '.outputs'
