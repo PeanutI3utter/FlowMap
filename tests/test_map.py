@@ -1,4 +1,4 @@
-import boolexpr as bx
+import sympy as sp
 import networkx as nx
 
 from stages.bng import blif_to_bng, gate
@@ -12,81 +12,81 @@ expected0 = nx.DiGraph()
 expected0.add_nodes_from([
     ('F', {
         'label': 'F',
-        'func': bx.get_var('OR[1]')
-                 | bx.get_var('AND[10]')
-                 | bx.get_var('OR[0]'),
+        'func': sp.symbols('OR[1]')
+                 | sp.symbols('AND[10]')
+                 | sp.symbols('OR[0]'),
         'gtype': gate.PO
     }),
     ('AND[10]', {
         'label': 'AND[10]',
-        'func': bx.get_var('AND[8]') & bx.get_var('AND[9]'),
+        'func': sp.symbols('AND[8]') & sp.symbols('AND[9]'),
         'gtype': gate.LUT
     }),
     ('OR[0]', {
         'label': 'OR[0]',
-        'func': (bx.get_var('AND[0]') & bx.get_var('AND[1]')) |
-                (bx.get_var('AND[0]') & bx.get_var('AND[3]')),
+        'func': (sp.symbols('AND[0]') & sp.symbols('AND[1]')) |
+                (sp.symbols('AND[0]') & sp.symbols('AND[3]')),
         'gtype': gate.LUT
     }),
     ('OR[1]', {
         'label': 'OR[1]',
-        'func': (bx.get_var('AND[5]') & bx.get_var('AND[1]')) |
-                (bx.get_var('AND[5]') & bx.get_var('AND[3]')),
+        'func': (sp.symbols('AND[5]') & sp.symbols('AND[1]')) |
+                (sp.symbols('AND[5]') & sp.symbols('AND[3]')),
         'gtype': gate.LUT
     }),
     ('AND[8]', {
         'label': 'AND[8]',
-        'func': ~bx.get_var('a') & bx.get_var('b'),
+        'func': ~sp.symbols('a') & sp.symbols('b'),
         'gtype': gate.LUT
     }),
     ('AND[9]', {
         'label': 'AND[9]',
-        'func': bx.get_var('c') & ~bx.get_var('d'),
+        'func': sp.symbols('c') & ~sp.symbols('d'),
         'gtype': gate.LUT
     }),
     ('AND[0]', {
         'label': 'AND[0]',
-        'func': bx.get_var('a') & ~bx.get_var('b'),
+        'func': sp.symbols('a') & ~sp.symbols('b'),
         'gtype': gate.LUT
     }),
     ('AND[1]', {
         'label': 'AND[1]',
-        'func': ~bx.get_var('c') & ~bx.get_var('d'),
+        'func': ~sp.symbols('c') & ~sp.symbols('d'),
         'gtype': gate.LUT
     }),
     ('AND[3]', {
         'label': 'AND[3]',
-        'func': bx.get_var('c') & bx.get_var('d'),
+        'func': sp.symbols('c') & sp.symbols('d'),
         'gtype': gate.LUT
     }),
     ('AND[5]', {
         'label': 'AND[5]',
-        'func': bx.get_var('a') & bx.get_var('b'),
+        'func': sp.symbols('a') & sp.symbols('b'),
         'gtype': gate.LUT
     }),
     ('AND[5]', {
         'label': 'AND[5]',
-        'func': bx.get_var('a') & bx.get_var('b'),
+        'func': sp.symbols('a') & sp.symbols('b'),
         'gtype': gate.LUT
     }),
     ('a', {
         'label': 'a',
-        'func': bx.get_var('a'),
+        'func': sp.symbols('a'),
         'gtype': gate.PI
     }),
     ('b', {
         'label': 'b',
-        'func': bx.get_var('b'),
+        'func': sp.symbols('b'),
         'gtype': gate.PI
     }),
     ('c', {
         'label': 'c',
-        'func': bx.get_var('c'),
+        'func': sp.symbols('c'),
         'gtype': gate.PI
     }),
     ('d', {
         'label': 'd',
-        'func': bx.get_var('d'),
+        'func': sp.symbols('d'),
         'gtype': gate.PI
     })
 ])
@@ -112,7 +112,7 @@ def test_map0():
         assert node in expected0.nodes
         assert res.nodes[node]['label'] == expected0.nodes[node]['label']
         assert res.nodes[node]['gtype'] == expected0.nodes[node]['gtype']
-        assert res.nodes[node]['func'].equiv(expected0.nodes[node]['func'])
+        assert res.nodes[node]['func'].equals(expected0.nodes[node]['func'])
 
     for edge in res.edges:
         assert edge in expected0.edges
@@ -127,98 +127,98 @@ expected1 = nx.DiGraph()
 expected1.add_nodes_from([
     ('F', {
         'label': 'F',
-        'func': bx.get_var('OR[1]')
-                 | bx.get_var('AND[10]')
-                 | bx.get_var('OR[0]'),
+        'func': sp.symbols('OR[1]')
+                 | sp.symbols('AND[10]')
+                 | sp.symbols('OR[0]'),
         'gtype': gate.PO
     }),
     ('G', {
         'label': 'G',
-        'func': bx.get_var('OR[4]') | bx.get_var('OR[5]'),
+        'func': sp.symbols('OR[4]') | sp.symbols('OR[5]'),
         'gtype': gate.PO
     }),
     ('AND[10]', {
         'label': 'AND[10]',
-        'func': bx.get_var('AND[8]') & bx.get_var('AND[9]'),
+        'func': sp.symbols('AND[8]') & sp.symbols('AND[9]'),
         'gtype': gate.LUT
     }),
     ('OR[0]', {
         'label': 'OR[0]',
-        'func': (bx.get_var('AND[0]') & bx.get_var('AND[1]')) |
-                (bx.get_var('AND[0]') & bx.get_var('AND[3]')),
+        'func': (sp.symbols('AND[0]') & sp.symbols('AND[1]')) |
+                (sp.symbols('AND[0]') & sp.symbols('AND[3]')),
         'gtype': gate.LUT
     }),
     ('OR[1]', {
         'label': 'OR[1]',
-        'func': (bx.get_var('AND[5]') & bx.get_var('AND[1]')) |
-                (bx.get_var('AND[5]') & bx.get_var('AND[3]')),
+        'func': (sp.symbols('AND[5]') & sp.symbols('AND[1]')) |
+                (sp.symbols('AND[5]') & sp.symbols('AND[3]')),
         'gtype': gate.LUT
     }),
     ('OR[4]', {
         'label': 'OR[4]',
-        'func': (bx.get_var('AND[0]') & bx.get_var('AND[3]')) |
-                (bx.get_var('AND[0]') & bx.get_var('AND[11]')),
+        'func': (sp.symbols('AND[0]') & sp.symbols('AND[3]')) |
+                (sp.symbols('AND[0]') & sp.symbols('AND[11]')),
         'gtype': gate.LUT
     }),
     ('OR[5]', {
         'label': 'OR[5]',
-        'func': (bx.get_var('AND[5]') & bx.get_var('AND[11]')) |
-                (bx.get_var('AND[8]') & bx.get_var('AND[11]')),
+        'func': (sp.symbols('AND[5]') & sp.symbols('AND[11]')) |
+                (sp.symbols('AND[8]') & sp.symbols('AND[11]')),
         'gtype': gate.LUT
     }),
     ('AND[0]', {
         'label': 'AND[0]',
-        'func': bx.get_var('a') & ~bx.get_var('b'),
+        'func': sp.symbols('a') & ~sp.symbols('b'),
         'gtype': gate.LUT
     }),
     ('AND[1]', {
         'label': 'AND[1]',
-        'func': ~bx.get_var('c') & ~bx.get_var('d'),
+        'func': ~sp.symbols('c') & ~sp.symbols('d'),
         'gtype': gate.LUT
     }),
     ('AND[3]', {
         'label': 'AND[3]',
-        'func': bx.get_var('c') & bx.get_var('d'),
+        'func': sp.symbols('c') & sp.symbols('d'),
         'gtype': gate.LUT
     }),
     ('AND[5]', {
         'label': 'AND[5]',
-        'func': bx.get_var('a') & bx.get_var('b'),
+        'func': sp.symbols('a') & sp.symbols('b'),
         'gtype': gate.LUT
     }),
     ('AND[8]', {
         'label': 'AND[8]',
-        'func': ~bx.get_var('a') & bx.get_var('b'),
+        'func': ~sp.symbols('a') & sp.symbols('b'),
         'gtype': gate.LUT
     }),
     ('AND[9]', {
         'label': 'AND[9]',
-        'func': bx.get_var('c') & ~bx.get_var('d'),
+        'func': sp.symbols('c') & ~sp.symbols('d'),
         'gtype': gate.LUT
     }),
     ('AND[11]', {
         'label': 'AND[11]',
-        'func': ~bx.get_var('c') & bx.get_var('d'),
+        'func': ~sp.symbols('c') & sp.symbols('d'),
         'gtype': gate.LUT
     }),
     ('a', {
         'label': 'a',
-        'func': bx.get_var('a'),
+        'func': sp.symbols('a'),
         'gtype': gate.PI
     }),
     ('b', {
         'label': 'b',
-        'func': bx.get_var('b'),
+        'func': sp.symbols('b'),
         'gtype': gate.PI
     }),
     ('c', {
         'label': 'c',
-        'func': bx.get_var('c'),
+        'func': sp.symbols('c'),
         'gtype': gate.PI
     }),
     ('d', {
         'label': 'd',
-        'func': bx.get_var('d'),
+        'func': sp.symbols('d'),
         'gtype': gate.PI
     })
 ])
@@ -268,7 +268,7 @@ def test_map1():
         assert node in expected1.nodes
         assert res.nodes[node]['label'] == expected1.nodes[node]['label']
         assert res.nodes[node]['gtype'] == expected1.nodes[node]['gtype']
-        assert res.nodes[node]['func'].equiv(expected1.nodes[node]['func'])
+        assert res.nodes[node]['func'].equals(expected1.nodes[node]['func'])
 
     for edge in res.edges:
         assert edge in expected1.edges

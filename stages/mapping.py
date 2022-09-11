@@ -1,4 +1,4 @@
-import boolexpr as bx
+import sympy as sp
 import networkx as nx
 
 from stages.enums import gate, inSymbol
@@ -20,7 +20,7 @@ def flowmap(labeled_graph: nx.DiGraph) -> nx.DiGraph:
 
     for circuit_input in circuit_inputs:
         LUT_graph.add_node(
-            circuit_input, func=bx.get_var(circuit_input),
+            circuit_input, func=sp.symbols(circuit_input),
             label=circuit_input, gtype=gate.PI
         )
 
@@ -41,7 +41,7 @@ def flowmap(labeled_graph: nx.DiGraph) -> nx.DiGraph:
 
                 assert len(inputs) == 2
                 if inputs[0] not in LUT_nodes:
-                    a = bx.get_var(inputs[0])
+                    a = sp.symbols(inputs[0])
                     func_stack[inputs[0]] = a
                     if inputs[0] not in LUT_graph.nodes:
                         LUT_graph.add_node(
@@ -54,7 +54,7 @@ def flowmap(labeled_graph: nx.DiGraph) -> nx.DiGraph:
                     a = func_stack[inputs[0]]
 
                 if inputs[1] not in LUT_nodes:
-                    b = bx.get_var(inputs[1])
+                    b = sp.symbols(inputs[1])
                     func_stack[inputs[1]] = b
                     if inputs[1] not in LUT_graph.nodes:
                         LUT_graph.add_node(
@@ -80,7 +80,7 @@ def flowmap(labeled_graph: nx.DiGraph) -> nx.DiGraph:
             else:
                 assert len(inputs) == 1
                 if inputs[0] not in LUT_nodes:
-                    a = bx.get_var(inputs[0])
+                    a = sp.symbols(inputs[0])
                     func_stack[inputs[0]] = a
                     if inputs[0] not in LUT_graph.nodes:
                         LUT_graph.add_node(

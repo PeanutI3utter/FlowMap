@@ -1,6 +1,6 @@
 import blifparser.blifparser as blifparser
-import boolexpr as bx
 import networkx as nx
+import sympy as sp
 import sys
 
 from stages.enums import gate, inSymbol
@@ -135,20 +135,22 @@ def bng_to_blif(bng: nx.DiGraph, output_file='a.blif', model_name='fpga'):
         if attributes['gtype'] == gate.PO:
             outputs_str += f' {label}'
 
-        func: bx.BoolExpr = attributes['func']
+        func: sp.logic.boolalg.BooleanFunction = attributes['func']
 
         input_order = []
         func_str += '.names'
-        for input in func.support():
+        for input in func.free_symbols:
             func_str += f' {input}'
             input_order.append(input)
         func_str += f' {node}\n'
 
-        for minterm in func.iter_sat():
-            for input in input_order:
-                val = minterm[input]
-                func_str += f'{val}'
-            func_str += ' 1\n'
+        sat = sp.logic.inference.satisfiable(func, all_models=True)
+        if sat:
+            for minterm in sat:
+                for input in input_order:
+                    val = minterm[input]
+                    func_str += f'{int(val)}'
+                func_str += ' 1\n'
 
     func_str += '.end'
     file.write(inputs_str + '\n')
