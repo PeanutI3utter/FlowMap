@@ -134,9 +134,16 @@ def label(graph: nx.DiGraph, k: int) -> nx.DiGraph:
         # set label to same as highest predecessor label
         if res_graph.graph['flow_value'] <= k:
 
-            outside_nodes = {
-                n[:-3] for n in res_graph.nodes if n.endswith('_in')
-            }
+            res_graph.remove_edges_from([
+                (edge_i, edge_o) for edge_i, edge_o, val in res_graph.edges(data=True)
+                if val['flow'] >= val['capacity']
+            ])
+            
+            outside_nodes = list(
+                node[:-3] for node in nx.dfs_preorder_nodes(res_graph, 'S')
+                if node.endswith('_in')
+            )
+
             cut = {
                 n for n in subgraph.nodes
                 if n not in input_nodes and n not in outside_nodes
