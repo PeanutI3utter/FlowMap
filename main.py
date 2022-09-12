@@ -15,15 +15,25 @@ def main():
     bng = blif_to_bng(sys.argv[1])
     name = bng.graph['name']
     lut = flowmap(label(bng, int(sys.argv[2])))
-    print(len(lut.nodes))
+    lut_c = lut.number_of_nodes()
+    print(lut_c)
     bng_to_blif(lut, f'{name}_mapped.blif', model_name=f'{name}_mapped')
-    gate_decomposition(lut, int(sys.argv[2]))
-    print(len(lut.nodes))
-    bng_to_blif(lut, f'{name}_mapped_opt.blif', model_name=f'{name}_mapped_opt')
-    lut = flow_pack(lut, int(sys.argv[2]))
-    print(len(lut.nodes))
-    bng_to_blif(lut, f'{name}_mapped_opt_flow.blif', model_name=f'{name}_mapped_opt')
+    while True:
+        gate_decomposition(lut, int(sys.argv[2]))
+        lut = flow_pack(lut, int(sys.argv[2]))
+        c_new = lut.number_of_nodes()
 
+        if c_new >= lut_c:
+            break
+
+        lut_c = c_new
+
+    bng_to_blif(
+        lut,
+        f'{name}_mapped_opt.blif',
+        model_name=f'{name}_mapped_opt'
+    )
+    print(lut_c)
 
 
 if __name__ == '__main__':

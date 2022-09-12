@@ -1,13 +1,21 @@
 import blifparser.blifparser as blifparser
 import networkx as nx
 import sympy as sp
-import sys
 
-from stages.enums import gate, inSymbol
+from stages.enums import gate
 from typing import Dict, List, Tuple
 
 
 def blif_to_bng(path_to_blif: str) -> nx.DiGraph:
+    """
+    Build Boolean Network Graph from BLIF files
+
+    Input:
+        path_to_blif: Path to BLIF file
+
+    Output:
+        NetworkX.DiGraph representation of the BNG
+    """
 
     try:
         blif = blifparser.BlifParser(path_to_blif).blif
@@ -24,6 +32,7 @@ def blif_to_bng(path_to_blif: str) -> nx.DiGraph:
     for output in blif.outputs.outputs:
         bng.add_node(output, gtype=gate.PO, label=output)
 
+    # Lookup tables for reusable gates
     and_lookup: Dict[Tuple[bool, str], Dict[Tuple[bool, str], str]] = {}
     or_lookup: Dict[Tuple[bool, str], Dict[Tuple[bool, str], str]] = {}
 
@@ -41,6 +50,7 @@ def blif_to_bng(path_to_blif: str) -> nx.DiGraph:
                 )
 
         ORs: List[str] = []
+        # Build a tree of AND gates for each minterm
         for minterm in truth_table:
             if minterm[-1] != '1':
                 continue
@@ -56,9 +66,16 @@ def blif_to_bng(path_to_blif: str) -> nx.DiGraph:
                 left: Tuple[bool, str] = ANDs.pop(0)
                 right: Tuple[bool, str] = ANDs.pop(0)
 
+                # Check if node with left input gate exists
                 if left not in and_lookup:
                     and_lookup[left] = {}
 
+                """
+                Check if node with right input gate exists
+                If so, then to be built AND gate exists already
+                and can be reused.
+                Otherwise build new AND gate and store it in lookup table
+                """
                 if right not in and_lookup[left]:
 
                     new_and_node = f'AND[{and_counter}]'
@@ -81,13 +98,21 @@ def blif_to_bng(path_to_blif: str) -> nx.DiGraph:
 
             ORs.append(ANDs[0])
 
+        # Build a tree of OR gates combing all AND gates
         while len(ORs) > 1:
             left: str = ORs.pop(0)
             right: str = ORs.pop(0)
 
+            # Check if node with left input gate exists
             if left not in or_lookup:
                 or_lookup[left] = {}
 
+            """
+            Check if node with right input gate exists
+            If so, then to be built OR gate exists already
+            and can be reused.
+            Otherwise build new OR gate and store it in lookup table
+            """
             if right not in or_lookup[left]:
 
                 new_or_node = f'OR[{or_counter}]'
@@ -112,6 +137,7 @@ def blif_to_bng(path_to_blif: str) -> nx.DiGraph:
             else:
                 ORs.append((False, or_lookup[left][right]))
 
+        # Create intermediate output nodes
         if not bng.has_node(bool_func.output):
             bng.add_node(
                 bool_func.output,
@@ -126,7 +152,24 @@ def blif_to_bng(path_to_blif: str) -> nx.DiGraph:
     return bng
 
 
-def bng_to_blif(bng: nx.DiGraph, output_file='a.blif', model_name='fpga'):
+def bng_to_blif(
+    bng: nx.DiGraph,
+    output_file: str = 'a.blif',
+    model_name: str = 'fpga'
+) -> None:
+    """
+    Build BLIF file from Boolean Network Graph containing LUTs
+
+    Input:
+        bng:
+            Boolean Network Graph containing LUTs
+        output_file:
+            Path to output BLIF file
+        model_name: Name of .model in BLIF file
+
+    Output:
+        None
+    """
 
     try:
         file = open(output_file, "w")
@@ -143,15 +186,19 @@ def bng_to_blif(bng: nx.DiGraph, output_file='a.blif', model_name='fpga'):
 
     for node, attributes in nodes:
         label = attributes['label']
+
+        # Add to .inputs, no output-cover
         if attributes['gtype'] == gate.PI:
             inputs_str += f' {label}'
             continue
 
+        # Add to .outputs, generate output cover
         if attributes['gtype'] == gate.PO:
             outputs_str += f' {label}'
 
         func: sp.logic.boolalg.BooleanFunction = attributes['func']
 
+        # Generate .names
         input_order = []
         func_str += '.names'
         for input in func.free_symbols:
@@ -159,6 +206,7 @@ def bng_to_blif(bng: nx.DiGraph, output_file='a.blif', model_name='fpga'):
             input_order.append(input)
         func_str += f' {node}\n'
 
+        # Generate output cover
         sat = sp.logic.inference.satisfiable(func, all_models=True)
         if sat:
             for minterm in sat:
@@ -173,82 +221,3 @@ def bng_to_blif(bng: nx.DiGraph, output_file='a.blif', model_name='fpga'):
     file.write(func_str + '\n')
 
     file.close()
-
-
-def handleAND(lhs, rhs):
-    conjunction = []
-    for entry_l in lhs:
-        for entry_r in rhs:
-            newcube = []
-            for i in range(len(entry_l)):
-                intersection = inSymbol(entry_l[i] & entry_r[i])
-                if (intersection == 0):
-                    newcube = []
-                    break
-                else:
-                    newcube.append(intersection)
-            if newcube != []:
-                conjunction.append(newcube)
-    return conjunction
-
-
-def handleOR(lhs, rhs):
-    disjunction = lhs + rhs
-    return disjunction
-
-
-def negateCubes(onSet):
-    negated = []
-    for cube in range(len(onSet)):
-        negatedCube = []
-        for symbol in range(len(onSet[cube])):
-            negatedCube.append(
-                inSymbol.ON if onSet[cube][symbol] == inSymbol.OFF else
-                inSymbol.OFF if onSet[cube][symbol] == inSymbol.ON else
-                inSymbol.DC
-            )
-
-        negated.append(negatedCube)
-    return negated
-
-
-def subgraphToOnSet(subgraph):
-    nodes = list(nx.topological_sort(subgraph))
-    inputs = []
-    output = -1
-
-    for node in range(len(nodes)):
-        if len(list(subgraph.predecessors(nodes[node]))) == 0:
-            inputs.append(node)
-        if len(list(subgraph.successors(nodes[node]))) == 0:
-            output = node
-
-    for node in range(len(nodes)):
-        if len(list(subgraph.predecessors(nodes[node]))) == 0:
-            inputOnSet = [inSymbol.DC] * len(inputs)
-            inputOnSet[node] = inSymbol.ON
-            nx.set_node_attributes(subgraph, {node: {"onSet": [inputOnSet]}})
-            continue
-        else:
-            onSets = nx.get_node_attributes(subgraph, "onSet")
-            incomingEdges = list(subgraph.in_edges(node, data=True))
-            leftParent = incomingEdges[0][0]
-            rightParent = incomingEdges[1][0]
-            leftEdgeInverted = bool(incomingEdges[0][2].get("inverted"))
-            rightEdgeInverted = bool(incomingEdges[1][2].get("inverted"))
-            leftOnSet = negateCubes(onSets[leftParent]) \
-                if leftEdgeInverted else onSets[leftParent]
-            rightOnSet = negateCubes(onSets[rightParent]) \
-                if rightEdgeInverted else onSets[rightParent]
-            gateTypes = nx.get_node_attributes(subgraph, "gtype")
-            ownGate = gateTypes[nodes[node]]
-            if (ownGate == gate.AND):
-                ownOnSet = handleAND(leftOnSet, rightOnSet)
-            elif (ownGate == gate.OR):
-                ownOnSet = handleOR(leftOnSet, rightOnSet)
-            else:
-                raise RuntimeError("unexpected gate type")
-                sys.exit()
-            nx.set_node_attributes(subgraph, {node: {'onSet': ownOnSet}})
-        if (node == output):
-            return ownOnSet

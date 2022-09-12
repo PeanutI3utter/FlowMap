@@ -135,10 +135,10 @@ def label(graph: nx.DiGraph, k: int) -> nx.DiGraph:
         if res_graph.graph['flow_value'] <= k:
 
             res_graph.remove_edges_from([
-                (edge_i, edge_o) for edge_i, edge_o, val in res_graph.edges(data=True)
+                (e_i, e_o) for e_i, e_o, val in res_graph.edges(data=True)
                 if val['flow'] >= val['capacity']
             ])
-            
+
             outside_nodes = list(
                 node[:-3] for node in nx.dfs_preorder_nodes(res_graph, 'S')
                 if node.endswith('_in')
