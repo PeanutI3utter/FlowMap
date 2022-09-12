@@ -16,10 +16,10 @@ def main():
     name = bng.graph['name']
     lut = flowmap(label(bng, int(sys.argv[2])))
     print(len(lut.nodes))
-    bng_to_blif(lut, 'a.blif', model_name=f'{name}_mapped')
+    bng_to_blif(lut, f'{name}_mapped.blif', model_name=f'{name}_mapped')
     gate_decomposition(lut, int(sys.argv[2]))
     print(len(lut.nodes))
-    bng_to_blif(lut, 'b.blif', model_name=f'{name}_mapped')
+    bng_to_blif(lut, f'{name}_mapped_opt.blif', model_name=f'{name}_mapped_opt')
 
 
 if __name__ == '__main__':
