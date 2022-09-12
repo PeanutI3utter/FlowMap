@@ -3,6 +3,7 @@ import networkx as nx
 
 from itertools import chain
 from stages.enums import gate
+from stages.label import extract_subgraph_from
 
 
 def gate_decomposition(LUT_graph: nx.DiGraph, k: int):
@@ -152,4 +153,140 @@ def gate_decomposition(LUT_graph: nx.DiGraph, k: int):
                 break
         if not decomp_found:
             break
-    pass
+
+
+def flowpackGraph(graph: nx.DiGraph) -> nx.DiGraph:
+    """
+    Create graph which is used to determine the label of the output of
+    the given subgraph
+
+    Input:
+        graph: Original graph, from which a flow graph is to be created
+
+    Output:
+        flow graph of the original function, the drain node has a attribute
+        "contains", which is a set of all nodes that is combined into the
+        drain node.
+
+    Requirements:
+        Requires that every node except the output node in subgraph to
+        have the attribute "level"
+    """
+    flowgraph = nx.DiGraph()
+    nodes_sorted = list(nx.topological_sort(graph))
+
+    input_nodes = [node for node, deg in graph.in_degree() if not deg]
+    output = nodes_sorted[-1]
+
+    # nodes which are not input nodes nor output node
+    inter_nodes = nodes_sorted[len(input_nodes):-1]
+
+    # input nodes are connected to S (sink)
+    for node in input_nodes:
+        flowgraph.add_edge('S', node + '_in')
+        flowgraph.add_edge(node + '_in', node + '_out', capacity=1)
+
+    # Split intermediate node, add bridging edge
+    # add edges going to intermediate node
+    for node in inter_nodes:
+        incoming_edges = graph.in_edges(node)
+        for edge in incoming_edges:
+            flowgraph.add_edge(edge[0] + '_out', node + '_in')
+        flowgraph.add_edge(node + '_in', node + '_out', capacity=1)
+
+    for node in graph.predecessors(output):
+        flowgraph.add_edge(node + '_out', output)
+
+    return flowgraph
+
+
+def flow_pack(LUT_graph: nx.DiGraph, k: int):
+    for node in LUT_graph:
+        if LUT_graph.nodes[node]['gtype'] == gate.PI:
+            continue
+        
+        packed = {node}
+
+        best_cut:nx.DiGraph = extract_subgraph_from(LUT_graph, node)
+
+        _, (_, X) = nx.minimum_cut(flowpackGraph(best_cut), 'S', node)
+
+        for n in X:
+            if n.endswith('_in'):
+                best_cut = nx.contracted_nodes(
+                    best_cut, node, n[:-3], self_loops=False
+                )
+                packed.add(n[:-3])
+
+        while True:
+            s_t_nodes = set([
+                n for n in best_cut.predecessors(node)
+                if best_cut.nodes[n]['gtype'] != gate.PI
+            ])
+            
+            ranked_cuts = []
+            for s_t_node in s_t_nodes:
+                try:
+                    new_cut: nx.DiGraph = \
+                        nx.contracted_nodes(
+                            best_cut, node, s_t_node, self_loops=False
+                        )
+                    maxflow, _ = nx.maximum_flow(flowpackGraph(new_cut), 'S', node)
+                    if maxflow <= k:
+                        rank = new_cut.in_degree(node)
+                        ranked_cuts.append((rank, s_t_node, new_cut))
+                except nx.NetworkXUnfeasible:
+                    pass
+            
+            if len(ranked_cuts) < 1:
+                break
+
+            best = min(ranked_cuts, key=lambda x: x[0])
+            best_cut = best[2]
+            packed.add(best[1])
+        
+        LUT_graph.nodes[node]['pack'] = packed
+
+    optimised = nx.DiGraph()
+    to_be_mapped = [
+        node for node, gtype in LUT_graph.nodes(data='gtype')
+        if gtype == gate.PO
+    ]
+
+    while len(to_be_mapped) > 0:
+        output = to_be_mapped.pop(0)
+
+        output_func = LUT_graph.nodes[output]['func']
+        pack = list(nx.topological_sort(LUT_graph.subgraph(
+            node for node in LUT_graph.nodes[output]['pack']
+            if LUT_graph.nodes[output]['gtype'] != gate.PI
+        )))[:-1]
+
+        for lut in reversed(pack):
+            sym = sp.symbols(lut)
+            lut_func = LUT_graph.nodes[lut]['func']
+            output_func = output_func.xreplace({sym: lut_func})
+        
+        optimised.add_node(
+            output,
+            label=output,
+            gtype=LUT_graph.nodes[output]['gtype'],
+            func=output_func
+        )
+
+        for input in output_func.free_symbols:
+            in_str = str(input)
+            if LUT_graph.nodes[in_str]['gtype'] == gate.PI:
+                if not optimised.has_node(in_str):
+                    optimised.add_node(
+                        in_str,
+                        label=in_str,
+                        gtype=gate.PI,
+                        func=sp.symbols(in_str)
+                    )
+            else:
+                to_be_mapped.append(in_str)
+            optimised.add_edge(in_str, output)
+    
+    return optimised
+
