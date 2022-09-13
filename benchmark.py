@@ -36,7 +36,7 @@ for f in inputfiles:
         scr.write(abcinput)
         scr.close()
 
-        abcoutput = subprocess.Popen(["./abc.exe", "-f abcbench.scr"], stdout=subprocess.PIPE).communicate()[0]
+        abcoutput = subprocess.Popen(["abc", "-f abcbench.scr"], stdout=subprocess.PIPE).communicate()[0]
         abcoutput = abcoutput.decode("utf-8")
 
 

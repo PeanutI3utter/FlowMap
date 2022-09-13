@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 graph_out.dot.png
 output.blif
+bernchmarks/
