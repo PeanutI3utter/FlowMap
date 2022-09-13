@@ -4,4 +4,9 @@ __pycache__/
 *.pyc
 graph_out.dot.png
 output.blif
-bernchmarks/
+benchmarks/
+*.exe
+*.rc
+*.csv
+*.ps1
+*.scr
