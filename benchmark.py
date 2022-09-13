@@ -1,6 +1,7 @@
 import subprocess
 import re
 import os
+import multiprocessing
 
 ABCLUTex = re.compile("nd\s*=\s*(\d+)")
 MT2LUTex = re.compile("Post optimisation:\s*(\d+)")
@@ -16,13 +17,14 @@ i = 1
 for f in inputfiles:
     inputfile = "./benchmarks/"+f
     
+    error = False
     print(f"\rbenchmarking file "+str(i)+" out of "+str(len(inputfiles))+" : "+f)
     i = i + 1
 
     try:
-        error = False
 
-        MT2output = subprocess.Popen(["wsl", "python3", "main.py", inputfile, "6"], stdout=subprocess.PIPE).communicate()[0]
+        #MT2output = subprocess.Popen(["wsl", "python3", "main.py", inputfile, "6"], stdout=subprocess.PIPE).communicate()[0]
+        MT2output = subprocess.Popen(["python3", "main.py", inputfile, "6"], stdout=subprocess.PIPE).communicate()[0]
         MT2output = MT2output.decode("utf-8")
 
         m = MT2LUTex.findall(MT2output)
