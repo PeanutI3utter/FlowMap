@@ -9,7 +9,7 @@ MT2depthex = re.compile("Depth:\s*(\d+)")
 CECex = re.compile("Networks are equivalent")
 
 resultFile = open("benchmark_results.csv","w")
-resultFile.write("file;equivalent;MT2_depth;MT2_LUTs;ABC_LUTs;ABC_depth\n")
+resultFile.write("file;equivalent;MT2_LUTs;MT2_depth;ABC_LUTs;ABC_depth\n")
 error = False
 MT2timeout = False
 
