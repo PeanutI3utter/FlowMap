@@ -9,8 +9,8 @@ To succesfully run `main.py`, the following packages are required:
 ```
 networkx
 pygraphviz
-matplotlib
-numpy
+graphviz
+sympy
 blifparser
 ```
 
